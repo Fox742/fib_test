@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using EasyNetQ;
 
 namespace Application2
 {
@@ -14,37 +15,40 @@ namespace Application2
         private static int lastCalculated = 1;
         private static Dictionary<int, int> FibonacciCache = new Dictionary<int, int>();
 
-        static FibonacciCalculator()
+        public static void Start()
         {
             FibonacciProcessor = new Thread(ProcessFibonacciRequests);
             FibonacciProcessor.IsBackground = true;
             FibonacciProcessor.Start();
         }
 
-        private static void sendResult(int result)
+        private static void sendResult(int parameter, int result, IBus _bus)
         {
-
+            _bus.PublishAsync<Tuple<int, int>>(new Tuple<int, int>(parameter, result));
         }
 
         private static void ProcessFibonacciRequests()
         {
-            while (true)
+            using (IBus bus = RabbitHutch.CreateBus("host=localhost"))
             {
-                int number;
-                if ( _queue.TryDequeue(out number) )
+                while (true)
                 {
-                    // Process number
-                    if ( FibonacciCache.ContainsKey(number) )
+                    int number;
+                    if (_queue.TryDequeue(out number))
                     {
-                        sendResult(FibonacciCache[number]); 
-                    }
-                    else
-                    {
-                        lastCalculated = number + lastCalculated;
-                        FibonacciCache[number] = lastCalculated;
-                        sendResult(lastCalculated);
-                    }
+                        // Process number
+                        if (FibonacciCache.ContainsKey(number))
+                        {
+                            sendResult(number,FibonacciCache[number],bus);
+                        }
+                        else
+                        {
+                            lastCalculated = number + lastCalculated;
+                            FibonacciCache[number] = lastCalculated;
+                            sendResult(number,lastCalculated,bus);
+                        }
 
+                    }
                 }
             }
         }

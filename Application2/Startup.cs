@@ -18,6 +18,7 @@ namespace Application2
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            FibonacciCalculator.Start();
         }
 
         public IConfiguration Configuration { get; }
