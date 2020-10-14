@@ -20,10 +20,11 @@ namespace Application2.Controllers
         [HttpGet("next")]
         public string[] Next(int number)
         {
+            FibonacciCalculator.Enqueue(number);
             return new string[]
             {
                 "Next",
-                "element:",
+                "element",
                 number.ToString()
             };
         }
