@@ -11,12 +11,19 @@ namespace Application2
     {
         private static ConcurrentQueue<int> _queue = new ConcurrentQueue<int>();
         private static Thread FibonacciProcessor = null;
+        private static int lastCalculated = 1;
+        private static Dictionary<int, int> FibonacciCache = new Dictionary<int, int>();
 
         static FibonacciCalculator()
         {
             FibonacciProcessor = new Thread(ProcessFibonacciRequests);
             FibonacciProcessor.IsBackground = true;
             FibonacciProcessor.Start();
+        }
+
+        private static void sendResult(int result)
+        {
+
         }
 
         private static void ProcessFibonacciRequests()
@@ -27,7 +34,16 @@ namespace Application2
                 if ( _queue.TryDequeue(out number) )
                 {
                     // Process number
-
+                    if ( FibonacciCache.ContainsKey(number) )
+                    {
+                        sendResult(FibonacciCache[number]); 
+                    }
+                    else
+                    {
+                        lastCalculated = number + lastCalculated;
+                        FibonacciCache[number] = lastCalculated;
+                        sendResult(lastCalculated);
+                    }
 
                 }
             }
