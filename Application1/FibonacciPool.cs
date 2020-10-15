@@ -11,19 +11,32 @@ namespace Application1
 {
     class FibonacciPool: IDisposable
     {
-
-        private List<FibonacciSequence> _sequences = new List<FibonacciSequence>();
+        //Guid.NewGuid().ToString();
+        private Dictionary<string, FibonacciSequence> _sequences = new Dictionary<string, FibonacciSequence>();
+        List<string> keys = new List<string>();
         private Task QueryTask = null;
         private CancellationTokenSource cancellationToken = new CancellationTokenSource();
         private IBus _bus;
+        private string _webApiLink;
+        private string _rabbitServiceURL;
 
-        public FibonacciPool(int SequenceAmount)
+
+        public FibonacciPool(int SequenceAmount, string webAPIString, string rabbitService)
         {
-            _bus = RabbitHutch.CreateBus("host=localhost");
-            _bus.Subscribe<Tuple<int, int>>(string.Empty,OnResponse);
+            _webApiLink = webAPIString;
+            _rabbitServiceURL = rabbitService;
+
+            _bus = RabbitHutch.CreateBus(_rabbitServiceURL);
+            _bus.Subscribe<Tuple<string, int>>(Guid.NewGuid().ToString(), OnResponse);
+            //_bus.Subscribe<Tuple<int, int>>(string.Empty, OnResponse);
+            //_bus.Subscribe<Tuple<int, int>>(Guid.NewGuid().ToString(), OnResponse);
 
             for (int i = 0; i < SequenceAmount; i++)
-                _sequences.Add(new FibonacciSequence());
+            {
+                string currentGuid = Guid.NewGuid().ToString();
+                _sequences[currentGuid] = new FibonacciSequence();
+                keys.Add(currentGuid);
+            }
             QueryTask = new Task(() => Query(cancellationToken.Token) );
             
         }
@@ -35,41 +48,42 @@ namespace Application1
 
         public void PrintFibCurrentValues()
         {
-            foreach (FibonacciSequence fs in _sequences)
+            foreach (string oneKey in keys)
             {
-                lock (fs)
-                {
-                    if ( _sequences.First()!=fs )
+                    if ( keys.First()!=oneKey )
                     {
                         Console.Write(" ");
                     }
-                    Console.Write(fs.Current);
-                }
+                    Console.Write( _sequences[oneKey].Current);
             }
             Console.WriteLine();
         }
 
-        private void SendQuery(int current)
+        private void SendQuery(int current,string guid)
         {
+            
             HttpClient client = new HttpClient();
             HttpRequestMessage request = new HttpRequestMessage();
-            request.RequestUri = new Uri("https://localhost:44370/fibonacci/next?n="+current.ToString());
+            request.RequestUri = new Uri(_webApiLink + "fibonacci/next?n="+current.ToString()+"&guid="+guid.ToString());
             request.Method = HttpMethod.Get;
             request.Headers.Add("Accept", "application/json");
             client.SendAsync(request);
+            
         }
 
         private void Query(CancellationToken token)
         {
             int i = 1;
+
             while (!token.IsCancellationRequested)
             {
-                lock(_sequences[i])
+                FibonacciSequence current = _sequences[keys[i]];
+                lock (current)
                 {
-                    if (!_sequences[i].Waiting)
+                    if (!current.Waiting)
                     {
-                        SendQuery(_sequences[i].Current);
-                        _sequences[i].Waiting = true;
+                        SendQuery(current.Current, keys[i]);
+                        current.Waiting = true;
                     }
                 }
                 i++;
@@ -78,23 +92,23 @@ namespace Application1
             }
         }
 
+        /*
         public void OnResponse(Tuple<int, int> message)
         {
-            foreach (FibonacciSequence fs in _sequences)
-            {
-                lock (fs)
-                {
-                    if ((fs.Waiting)&&(fs.Current==message.Item1))
-                    {
-                        fs.Current = message.Item2;
-                        fs.Waiting = false;
-                        break ;
-                    }
-                }
-            }
-            Task.Run( ()=> { PrintFibCurrentValues(); } );
-        }
 
+        }
+        */
+        
+        public void OnResponse(Tuple<string, int> message)
+        {
+                lock (_sequences)
+                {
+                    _sequences[message.Item1].Current = message.Item2;
+                    _sequences[message.Item1].Waiting = false;
+                    PrintFibCurrentValues();
+                }
+        }
+        
         public void Dispose()
         {
             _bus.Dispose();

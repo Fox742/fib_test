@@ -18,15 +18,9 @@ namespace Application2.Controllers
         }
 
         [HttpGet("next")]
-        public string[] Next(int n)
+        public void Next(int n, string guid)
         {
-            FibonacciCalculator.Enqueue(n);
-            return new string[]
-            {
-                "Next",
-                "element",
-                n.ToString()
-            };
+            FibonacciCalculator.Enqueue(new FibonacciReq() { id = guid, previousNumber = n });
         }
     }
 }

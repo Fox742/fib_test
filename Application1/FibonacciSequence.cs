@@ -9,7 +9,6 @@ namespace Application1
         public int Current { set; get; }
         public bool Waiting { set; get; }
 
-
         public FibonacciSequence()
         {
             Current = 0;

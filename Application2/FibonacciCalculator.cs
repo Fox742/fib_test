@@ -10,52 +10,64 @@ namespace Application2
 {
     public class FibonacciCalculator
     {
-        private static ConcurrentQueue<int> _queue = new ConcurrentQueue<int>();
+        private static ConcurrentQueue<FibonacciReq> _queue = new ConcurrentQueue<FibonacciReq>();
+        private static Dictionary<string,int> SequenceCache = new Dictionary<string,int>();
         private static Thread FibonacciProcessor = null;
-        private static int lastCalculated = 1;
+        private static int previousMember = 1;
+        private static string _rabbitConnectionString;
+
+
+
         private static Dictionary<int, int> FibonacciCache = new Dictionary<int, int>();
 
-        public static void Start()
+        public static void Start(string rabbitConnectionString)
         {
+            _rabbitConnectionString = rabbitConnectionString;
             FibonacciProcessor = new Thread(ProcessFibonacciRequests);
             FibonacciProcessor.IsBackground = true;
             FibonacciProcessor.Start();
         }
 
-        private static void sendResult(int parameter, int result, IBus _bus)
+        private static void sendResult(string guid, int result, IBus _bus)
         {
-            _bus.PublishAsync<Tuple<int, int>>(new Tuple<int, int>(parameter, result));
+            _bus.PublishAsync<Tuple<string, int>>(new Tuple<string, int>(guid, result));
         }
 
         private static void ProcessFibonacciRequests()
         {
-            using (IBus bus = RabbitHutch.CreateBus("host=localhost"))
+            using (IBus bus = RabbitHutch.CreateBus(_rabbitConnectionString))
             {
                 while (true)
                 {
-                    int number;
-                    if (_queue.TryDequeue(out number))
+                    FibonacciReq fr;
+                    if (_queue.TryDequeue(out fr))
                     {
-                        // Process number
-                        if (FibonacciCache.ContainsKey(number))
+                        Thread.Sleep(250);
+                        if(! SequenceCache.ContainsKey(fr.id))
                         {
-                            sendResult(number,FibonacciCache[number],bus);
+                            SequenceCache[fr.id] = 0;
+                        }
+
+                        if (fr.previousNumber==0)
+                        {
+                            sendResult(fr.id, 1, bus);
                         }
                         else
                         {
-                            lastCalculated = number + lastCalculated;
-                            FibonacciCache[number] = lastCalculated;
-                            sendResult(number,lastCalculated,bus);
+                            int sum = fr.previousNumber + SequenceCache[fr.id];
+                            SequenceCache[fr.id] = fr.previousNumber;
+                            sendResult(fr.id, sum, bus);
                         }
+
 
                     }
                 }
             }
         }
 
-        public static void Enqueue(int current)
+        public static void Enqueue(FibonacciReq fr)
         {
-            _queue.Enqueue(current);
+            _queue.Enqueue(fr);
         }
     }
 }
