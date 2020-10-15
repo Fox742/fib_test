@@ -17,6 +17,8 @@ namespace Application1
                 .Build();
 
             int sequenceAmount = 3;
+            Console.WriteLine("                     <----- КАЖДЫЙ СТОЛБЕЦ - ОТДЕЛЬНАЯ ПОСЛЕДОВАТЕЛЬНОСТЬ ФИБОНАЧЧИ ------>");
+            Console.WriteLine();
             using (FibonacciPool fp = new FibonacciPool(sequenceAmount, config["web_api_url"], config["rabbit_api_url"]))
             {
                 fp.Start();

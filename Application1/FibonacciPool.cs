@@ -19,7 +19,7 @@ namespace Application1
         private IBus _bus;
         private string _webApiLink;
         private string _rabbitServiceURL;
-
+        private List<int> printedValuesLast = new List<int>();
 
         public FibonacciPool(int SequenceAmount, string webAPIString, string rabbitService)
         {
@@ -28,8 +28,6 @@ namespace Application1
 
             _bus = RabbitHutch.CreateBus(_rabbitServiceURL);
             _bus.Subscribe<Tuple<string, int>>(Guid.NewGuid().ToString(), OnResponse);
-            //_bus.Subscribe<Tuple<int, int>>(string.Empty, OnResponse);
-            //_bus.Subscribe<Tuple<int, int>>(Guid.NewGuid().ToString(), OnResponse);
 
             for (int i = 0; i < SequenceAmount; i++)
             {
@@ -48,15 +46,22 @@ namespace Application1
 
         public void PrintFibCurrentValues()
         {
+            List<int> ValuesToPrint = new List<int>();
             foreach (string oneKey in keys)
             {
-                    if ( keys.First()!=oneKey )
-                    {
-                        Console.Write(" ");
-                    }
-                    Console.Write( _sequences[oneKey].Current);
+                //Console.Write(String.Format("{0,8}|",_sequences[oneKey].Current));
+                ValuesToPrint.Add(_sequences[oneKey].Current);
             }
-            Console.WriteLine();
+            if (!ValuesToPrint.SequenceEqual<int>(printedValuesLast))
+            {
+                foreach (int oneVal in ValuesToPrint)
+                {
+                    Console.Write(String.Format("{0,8}|", oneVal));
+                }
+                Console.WriteLine();
+                printedValuesLast = ValuesToPrint;
+            }
+
         }
 
         private void SendQuery(int current,string guid)
@@ -67,8 +72,7 @@ namespace Application1
             request.RequestUri = new Uri(_webApiLink + "fibonacci/next?n="+current.ToString()+"&guid="+guid.ToString());
             request.Method = HttpMethod.Get;
             request.Headers.Add("Accept", "application/json");
-            client.SendAsync(request);
-            
+            client.SendAsync(request).Wait();
         }
 
         private void Query(CancellationToken token)
@@ -77,27 +81,29 @@ namespace Application1
 
             while (!token.IsCancellationRequested)
             {
-                FibonacciSequence current = _sequences[keys[i]];
-                lock (current)
-                {
-                    if (!current.Waiting)
+
+                    FibonacciSequence current = _sequences[keys[i]];
+                    lock (current)
                     {
-                        SendQuery(current.Current, keys[i]);
-                        current.Waiting = true;
+                        if (!current.Waiting)
+                        {
+                            try
+                            {
+                                SendQuery(current.Current, keys[i]);
+                                current.Waiting = true;
+                            }
+                            catch(System.Exception e)
+                            {
+
+                            }
+                        }
                     }
-                }
+
                 i++;
                 if (i >= _sequences.Count)
                     i = 0;
             }
         }
-
-        /*
-        public void OnResponse(Tuple<int, int> message)
-        {
-
-        }
-        */
         
         public void OnResponse(Tuple<string, int> message)
         {

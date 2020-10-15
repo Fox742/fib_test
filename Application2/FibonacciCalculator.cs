@@ -42,7 +42,7 @@ namespace Application2
                     FibonacciReq fr;
                     if (_queue.TryDequeue(out fr))
                     {
-                        Thread.Sleep(250);
+                        Thread.Sleep(350);
                         if(! SequenceCache.ContainsKey(fr.id))
                         {
                             SequenceCache[fr.id] = 0;
