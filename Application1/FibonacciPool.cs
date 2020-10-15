@@ -11,7 +11,6 @@ namespace Application1
 {
     class FibonacciPool: IDisposable
     {
-        //Guid.NewGuid().ToString();
         private Dictionary<string, FibonacciSequence> _sequences = new Dictionary<string, FibonacciSequence>();
         List<string> keys = new List<string>();
         private Task QueryTask = null;
@@ -49,7 +48,6 @@ namespace Application1
             List<int> ValuesToPrint = new List<int>();
             foreach (string oneKey in keys)
             {
-                //Console.Write(String.Format("{0,8}|",_sequences[oneKey].Current));
                 ValuesToPrint.Add(_sequences[oneKey].Current);
             }
             if (!ValuesToPrint.SequenceEqual<int>(printedValuesLast))
