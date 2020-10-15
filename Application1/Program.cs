@@ -11,9 +11,10 @@ namespace Application1
             using (FibonacciPool fp = new FibonacciPool(sequenceAmount))
             {
                 fp.Start();
-                Thread.Sleep(30000);
+                Thread.Sleep(300000);
             }
             Console.WriteLine("Hello World!");
+            Console.ReadLine();
         }
     }
 }

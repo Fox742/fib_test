@@ -18,14 +18,14 @@ namespace Application2.Controllers
         }
 
         [HttpGet("next")]
-        public string[] Next(int number)
+        public string[] Next(int n)
         {
-            FibonacciCalculator.Enqueue(number);
+            FibonacciCalculator.Enqueue(n);
             return new string[]
             {
                 "Next",
                 "element",
-                number.ToString()
+                n.ToString()
             };
         }
     }

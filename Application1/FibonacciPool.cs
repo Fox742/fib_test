@@ -19,8 +19,8 @@ namespace Application1
 
         public FibonacciPool(int SequenceAmount)
         {
-            _bus = RabbitHutch.CreateBus("host=localhost;username=Igor;password=nec68msw");
-            _bus.Subscribe<Tuple<int, int>>("fibonacci",OnResponse);
+            _bus = RabbitHutch.CreateBus("host=localhost");
+            _bus.Subscribe<Tuple<int, int>>(string.Empty,OnResponse);
 
             for (int i = 0; i < SequenceAmount; i++)
                 _sequences.Add(new FibonacciSequence());
@@ -46,6 +46,7 @@ namespace Application1
                     Console.Write(fs.Current);
                 }
             }
+            Console.WriteLine();
         }
 
         private void SendQuery(int current)
