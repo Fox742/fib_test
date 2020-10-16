@@ -23,3 +23,10 @@ MessageBus: RabbitMQ + EasyNetQ
 Приложение1 (Application1) - Консольное приложение .NET Core  
 Приложение2 (Application2) - Приложение ASP.NET Core WebAPI  
 #### Настройка
+### Приложение1 (Application1)
+Файл appsettings.json содержит два ключа:
+`"web_api_url"` - адрес хоста web-службы
+`"rabbit_api_url"` - connection string шины rabbitMQ
+### Приложение2 (Application2)
+Файл appsettings.json содержит ключ:
+`"rabbit_connection_string"` - connection string шины rabbitMQ
