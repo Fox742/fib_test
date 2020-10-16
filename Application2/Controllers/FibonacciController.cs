@@ -14,12 +14,13 @@ namespace Application2.Controllers
 
         public string Get()
         {
-            return "Сервис запущен! Воспользуйтесь методом fibonacci/next?n=<int> для получения следующего числа последовательности Фибоначчи";
+            return "Сервис запущен! Теперь вы можете запустить Приложение 1 для вычисления последовательностей Фибоначчи";
         }
 
         [HttpGet("next")]
         public void Next(int n, string guid)
         {
+            // Добавляем запрос в очередь на обработку
             FibonacciCalculator.Enqueue(new FibonacciReq() { id = guid, previousNumber = n });
         }
     }

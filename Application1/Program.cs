@@ -15,6 +15,7 @@ namespace Application1
         {
             int sequenceAmount = 3;
 
+            // Считываем количество асинхронных расчётов
             if (args.Length > 0)
             {
                 int amountEntered;
@@ -29,6 +30,7 @@ namespace Application1
                 }
             }
 
+            // Подключем файл конфигурации, чтобы в нём прописать адрес web и rabbit служб
             IConfiguration config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
                 .Build();
