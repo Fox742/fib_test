@@ -22,6 +22,7 @@ MessageBus: RabbitMQ + EasyNetQ
 ### Реализация
 Приложение1 (Application1) - Консольное приложение .NET Core  
 Приложение2 (Application2) - Приложение ASP.NET Core WebAPI  
+Приложения были разработаны в Visual Studio 2019 на платформе .NET Core 3.1
 #### Настройка
 ##### Приложение1 (Application1)
 Файл appsettings.json содержит два ключа:  
