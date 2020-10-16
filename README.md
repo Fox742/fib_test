@@ -19,3 +19,7 @@
 #### Рекомендуемые технологии  
 REST: ASP.NET WebApi + HttpClient  
 MessageBus: RabbitMQ + EasyNetQ  
+### Реализация
+Приложение1 (Application1) - Консольное приложение .NET Core  
+Приложение2 (Application2) - Приложение ASP.NET Core WebAPI  
+#### Настройка
